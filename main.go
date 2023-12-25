@@ -1,9 +1,8 @@
 package main
 
-import (
-	"fmt"
-)
+import "os"
 
-func main(){
-    fmt.Println("Hello World")
+func main() {
+	editor := InitEditor(os.Args)
+	Run(&editor)
 }
