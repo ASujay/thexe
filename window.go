@@ -1,104 +1,87 @@
 package main
 
 import (
-	"fmt"
-	"os"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
+type Window struct {
+	screens []Screen
+}
 
-/****************************************************************************
- *                                   Tab                                    * 
- ****************************************************************************
-*/
+func InitWindow() *Window {
+	window := Window{
+		screens: []Screen{NewWelcomeScreen()},
+	}
 
-// This is window types
+	return &window
+}
+
+func (e *Editor) UpdateWindow(msg tea.Msg) (tea.Model, tea.Cmd) {
+	return e, nil
+}
+
+func (e *Editor) ViewWindow() string {
+	return e.window.screens[e.currentActiveScreen].render()
+}
+
+type ScreenType int
+
 const (
-	WelcomeScreen = iota
-	HexEditor
+	WELCOME_SCREEN ScreenType = iota
+	HELP_SCREEN
+	EDITOR_SCREEN
+	BUFFER_LIST_SCREEN
 )
 
-// the editor can have multiple tabs open
-type Tab struct {
-	File       File
-	WindowType int
+type Screen interface {
+	render() string
 }
 
-
-func (tab Tab) Render() string {
-    return "View"
+type WelcomeScreen struct {
+	appName         string
+	instructions    string
+	backgroundColor string
+	foregroundColor string
 }
 
-/****************************************************************************
- *                               Command Line                               * 
- ****************************************************************************
-*/
+func NewWelcomeScreen() *WelcomeScreen {
 
-type CommandLine struct {
-    model tea.Model 
+	titleStr := "  _____ _   _ _______  _______ \n" +
+		" |_   _| | | | ____\\ \\/ / ____|\n" +
+		"   | | | |_| |  _|  \\  /|  _|  \n" +
+		"   | | |  _  | |___ /  \\| |___ \n" +
+		"   |_| |_| |_|_____/_/\\_\\_____|\n\n" +
+		"******* A Terminal Hex Editor ********\n"
+	instructionsStr := "\n" +
+        GetNormalText("Type ") + GetStyledCode("[") + GetNormalText(" anytime to toggle the editor to COMMAND mode.") +"\n\n" +
+        GetNormalText("Type ") + GetStyledCode(":h<Enter>") + GetNormalText(" to open the manual.") + "\n\n" +
+		GetNormalText("Type ") + GetStyledCode(":q<Enter>") + GetNormalText(" to quit the application when in COMMAND mode.") + "\n\n" +
+		GetNormalText("Type ") + GetStyledCode(":e <File_Path><Enter>") + GetNormalText(" in COMMAND mode to open and start editing a file.") + "\n\n" +
+		GetNormalText("Type ") + GetStyledCode(":w<Enter>") + GetNormalText(" inside open file to save the changes.") + "\n\n"
+
+	return &WelcomeScreen{
+		appName:         titleStr,
+		instructions:    instructionsStr,
+		backgroundColor: "103",
+		foregroundColor: "234",
+	}
 }
 
-func (commandLine CommandLine) Render() string {
-    return "Command Line"
+func (s *WelcomeScreen) render() string {
+	screenStyle := lipgloss.NewStyle().
+		Width(100).
+		Height(30).
+		Border(lipgloss.NormalBorder()).
+		Background(lipgloss.Color(s.backgroundColor)).
+		Foreground(lipgloss.Color(s.foregroundColor)).
+		Align(lipgloss.Center).PaddingTop(5)
+
+	instructionsStyle := lipgloss.NewStyle().
+		Background(lipgloss.Color(s.backgroundColor)).
+		Foreground(lipgloss.Color(s.foregroundColor)).
+        Align(lipgloss.Center).
+		MarginTop(2)
+
+	return screenStyle.Render(s.appName + "\n" + instructionsStyle.Render(s.instructions))
 }
-
-/****************************************************************************
- *                                  Editor                                  * 
- ****************************************************************************
-*/
-
-func InitEditor(args []string) Editor {
-	editor := Editor{
-        activeTab: 0,
-        commandLine: CommandLine{},
-        tabs: []Tab{
-            Tab{},
-        },
-    }
-	return editor
-}
-
-type Editor struct {
-    tabs []Tab
-    activeTab uint
-    commandLine CommandLine
-}
-
-func (editor Editor) Init() tea.Cmd {
-    return nil
-}
-
-func (editor Editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    switch msg := msg.(type) {
-        case tea.KeyMsg:
-            switch msg.String() {
-                case "ctrl+c", "q":
-                    return editor, tea.Quit
-            }
-    }
-
-    return editor, nil
-}
-
-func (editor Editor) View() string {
-    // we have 2 diferent things that we render.
-    // first is the actual window which will be either the main page
-    // or some binary file
-    // second would be the command line / status line which will be at
-    // the bottom of the window
-    // get the string representation of the tab 
-    activeTab := editor.tabs[editor.activeTab].Render()
-    // get the string representation of the command line
-    commandLine := editor.commandLine.Render()
-    return activeTab + "\n" + commandLine + "\n" 
-}
-
-func Run(editor *Editor) {
-    program := tea.NewProgram(*editor)
-    if _, err := program.Run(); err != nil {
-        fmt.Printf("Program cannot start, Error: %v\n", err)
-        os.Exit(1)
-    }    
-}
-
-

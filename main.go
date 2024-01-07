@@ -1,8 +1,16 @@
 package main
 
-import "os"
+import (
+	"fmt"
+	"os"
+
+	tea "github.com/charmbracelet/bubbletea"
+)
 
 func main() {
-	editor := InitEditor(os.Args)
-	Run(&editor)
+	program := tea.NewProgram(InitEditor())
+	if _, err := program.Run(); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(-1)
+	}
 }
