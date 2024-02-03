@@ -1,15 +1,8 @@
 package main
 
-import "github.com/charmbracelet/lipgloss"
-
-func GetCommandLineElementStyle(width int, backgroundColor string, foregroundColor string) lipgloss.Style {
-	cmdElementStyle := lipgloss.NewStyle().
-		Width(width).
-		Border(lipgloss.NormalBorder()).
-		Background(lipgloss.Color(backgroundColor)).
-		Foreground(lipgloss.Color(foregroundColor))
-	return cmdElementStyle
-}
+import (
+    "github.com/charmbracelet/lipgloss"
+)
 
 func GetStyledCode(text string) string {
 	return lipgloss.NewStyle().
@@ -23,3 +16,4 @@ func GetNormalText(text string) string {
 		Foreground(lipgloss.Color("234")).
 		Render(text)
 }
+
